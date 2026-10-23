@@ -126,3 +126,23 @@ class BoundedArchiveTests(unittest.TestCase):
   self.a.db.execute('UPDATE revisions SET payload=?',('x'*(2*1024*1024+1),))
   with self.assertRaisesRegex(ValueError,'payload'):h.search('owner','query')
   self.assertEqual(h.encoder.calls,0)
+
+class RecordCountCapTests(unittest.TestCase):
+ setUp=HybridTests.setUp
+ tearDown=HybridTests.tearDown
+ backend=HybridTests.backend
+ def test_record_count_cap_before_embedding(self):
+  p=self.root/'many.json';p.write_text(json.dumps({'id':1,'messages':[{'id':i,'type':'message','date':'2026-01-01','from':'Synthetic','text':'row'}for i in range(1001)]}))
+  self.a.import_file(p,'telegram','synthetic','c','owner');h=self.backend()
+  with self.assertRaisesRegex(ValueError,'record/payload cap'):h.search('owner','query')
+  self.assertEqual(h.encoder.calls,0)
+
+class SmokeQualityGateTests(unittest.TestCase):
+ def test_smoke_failure_exits_nonzero(self):
+  import runpy
+  try:module=runpy.run_path(str(Path(__file__).resolve().parents[1]/'demo_hybrid.py'),run_name='demo_import')
+  except SystemExit:self.fail('Smoke demo must be import-safe and expose quality gate')
+  self.assertIn('smoke_exit_code',module)
+  self.assertEqual(module['smoke_exit_code'](5,5),0)
+  self.assertNotEqual(module['smoke_exit_code'](4,5),0)
+  self.assertNotEqual(module['smoke_exit_code'](0,0),0)

@@ -27,7 +27,7 @@ python runtime.py --db sample.sqlite --owner demo view RECORD_ID_FROM_SEARCH
 - ChatGPT JSON mapping, Telegram JSON, один профиль WhatsApp TXT, EML text/plain.
 - Offline connector_evidence: сохранённые ответы read-only источника с provenance и явными пропусками, но не самостоятельное подключение.
 - Exact source viewer, наблюдаемые ревизии, дедупликация и ограниченный безопасный ZIP import.
-- 43 синтетических тестов, в том числе опасный ZIP, повтор/правка, пустой результат, неполнота, scope mismatch.
+- 45 синтетических тестов, в том числе опасный ZIP, повтор/правка, пустой результат, неполнота, scope mismatch.
 - KnowledgeBackend Protocol для будущей замены поиска; добавлен отдельный экспериментальный [локальный hybrid-адаптер](docs/HYBRID.md). Он требует локальных весов и optional ML-зависимостей, не меняет default CLI и не генерирует ответы. Правильное сообщение не гарантирует правильного ответного фрагмента; similarity не вероятность истины.
 
 ## Безопасность и ограничения
@@ -38,7 +38,7 @@ Single-owner local CLI. --owner проверяет согласованност�
 
 ## Проектная документация, не готовые функции
 
-[Целевое ТЗ](docs/TECHNICAL_SPEC_RU.md), [prior art и ограничения сервисов](docs/PRIOR_ART_AND_CONNECTORS_RU.md), паспорт коннектора и 30 целевых acceptance scenarios в docs/. Они описывают более широкий будущий продукт. Эти 30 сценариев не равны 43 выполненным unit tests CLI и optional adapter.
+[Целевое ТЗ](docs/TECHNICAL_SPEC_RU.md), [prior art и ограничения сервисов](docs/PRIOR_ART_AND_CONNECTORS_RU.md), паспорт коннектора и 30 целевых acceptance scenarios в docs/. Они описывают более широкий будущий продукт. Эти 30 сценариев не равны 45 выполненным unit tests CLI и optional adapter.
 
 ## Лицензия
 

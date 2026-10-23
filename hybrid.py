@@ -23,7 +23,10 @@ def verify_model_directory(directory):
   path=directory/entry['path']
   if path.is_symlink() or not path.is_file() or path.stat().st_size!=entry['bytes']:
    raise ValueError('Model file type or size mismatch')
-  with path.open('rb') as stream:actual=hashlib.file_digest(stream,'sha256').hexdigest()
+  digest=hashlib.sha256()
+  with path.open('rb') as stream:
+   for block in iter(lambda:stream.read(1024*1024),b''):digest.update(block)
+  actual=digest.hexdigest()
   if actual!=entry['sha256']:raise ValueError('Model file checksum mismatch')
  return directory
 

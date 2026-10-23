@@ -5,7 +5,7 @@
 - Opt-in in-process E5 encoder and reciprocal-rank fusion; lexical default unchanged.
 - Pinned local safetensors, no remote code or inference API; model weights excluded.
 - Up to three non-overlapping exact spans with bounded context, original source provenance and unchanged partial/unknown coverage.
-- Stale index detection, scope checks and fifteen additional synthetic tests (43 total), including trusted manifest substitution rejection.
+- Stale index detection, scope checks and seventeen additional synthetic tests (45 total), including trusted manifest substitution rejection.
 - Candidate retrieval is not answer verification: even the right source may have irrelevant top spans.
 - Real-model synthetic demo is optional; default CI needs no ML dependencies or weights.
 
