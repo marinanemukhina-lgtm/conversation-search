@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:correspondence-search:connector-capability:1",
+  "title": "Connector capability manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "sourceType",
+    "connectorVersion",
+    "mode",
+    "scopeDescription",
+    "capabilities",
+    "coverage",
+    "verification"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0"
+    },
+    "sourceType": {
+      "type": "string",
+      "minLength": 1
+    },
+    "connectorVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mode": {
+      "enum": [
+        "export",
+        "read_only_api",
+        "read_only_imap",
+        "unverified"
+      ]
+    },
+    "scopeDescription": {
+      "type": "string",
+      "minLength": 1
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "history",
+        "incremental",
+        "edits",
+        "deletions",
+        "attachments",
+        "deepLinks"
+      ],
+      "properties": {
+        "history": {
+          "enum": [
+            "supported",
+            "unsupported",
+            "partial",
+            "unknown"
+          ]
+        },
+        "incremental": {
+          "enum": [
+            "supported",
+            "unsupported",
+            "partial",
+            "unknown"
+          ]
+        },
+        "edits": {
+          "enum": [
+            "supported",
+            "unsupported",
+            "partial",
+            "unknown"
+          ]
+        },
+        "deletions": {
+          "enum": [
+            "supported",
+            "unsupported",
+            "partial",
+            "unknown"
+          ]
+        },
+        "attachments": {
+          "enum": [
+            "supported",
+            "unsupported",
+            "partial",
+            "unknown"
+          ]
+        },
+        "deepLinks": {
+          "enum": [
+            "supported",
+            "unsupported",
+            "partial",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "gaps",
+        "lastSuccessfulSync"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "complete_within_declared_scope",
+            "partial",
+            "unknown",
+            "stale",
+            "failed"
+          ]
+        },
+        "gaps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "lastSuccessfulSync": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "evidenceRefs"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "unverified",
+            "documentation_only",
+            "synthetic_tested",
+            "export_tested",
+            "live_tested"
+          ]
+        },
+        "evidenceRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

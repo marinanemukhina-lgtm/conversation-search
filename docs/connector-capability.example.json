@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1.0",
+  "sourceType": "max",
+  "connectorVersion": "not-implemented",
+  "mode": "unverified",
+  "scopeDescription": "Personal historical messages: authorized access route not yet established. Bot API is a separate limited scope.",
+  "capabilities": {
+    "history": "unknown",
+    "incremental": "unknown",
+    "edits": "unknown",
+    "deletions": "unknown",
+    "attachments": "unknown",
+    "deepLinks": "unknown"
+  },
+  "coverage": {
+    "status": "unknown",
+    "gaps": [
+      "No account or archive connected"
+    ],
+    "lastSuccessfulSync": null
+  },
+  "verification": {
+    "status": "documentation_only",
+    "evidenceRefs": [
+      "https://dev.max.ru/docs-api"
+    ]
+  }
+}

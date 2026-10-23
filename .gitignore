@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+*.sqlite*
+*.db*
+.env*
+reports/
+PRIVATE/
+private/
+imports/
+exports/
+*.zip
+*.pdf

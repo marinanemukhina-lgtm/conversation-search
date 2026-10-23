@@ -1,0 +1,20 @@
+name: Synthetic offline tests
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Runtime capabilities
+        run: python3 -c "import sys,sqlite3; print(sys.version); print(sqlite3.sqlite_version); sqlite3.connect(':memory:').execute('CREATE VIRTUAL TABLE test USING fts5(text)')"
+      - name: Unit tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Synthetic demo
+        run: python3 demo.py
