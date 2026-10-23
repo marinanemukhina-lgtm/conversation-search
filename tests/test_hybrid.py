@@ -73,3 +73,56 @@ class MultiSpanTests(unittest.TestCase):
    self.assertEqual(x['text'],text[x['start']:x['end']])
    self.assertEqual(x['context']['text'],text[x['context']['start']:x['context']['end']])
    for y in spans[i+1:]:self.assertFalse(x['start']<y['end']and y['start']<x['end'])
+
+class ModelManifestTests(unittest.TestCase):
+ def setUp(self):
+  self.temp=tempfile.TemporaryDirectory();self.root=Path(self.temp.name)
+  self.trusted=json.loads((Path(__file__).resolve().parents[1]/'model-manifest.json').read_text())
+ def tearDown(self):self.temp.cleanup()
+ def verify(self):
+  import hybrid
+  self.assertTrue(hasattr(hybrid,'verify_model_directory'),'Pinned manifest verification missing')
+  return hybrid.verify_model_directory(self.root)
+ def write(self,m):self.root.joinpath('manifest.json').write_text(json.dumps(m))
+ def test_replaced_bytes_and_matching_local_manifest_rejected(self):
+  import hashlib
+  for entry in self.trusted['files']:
+   raw=b'arbitrary replacement';self.root.joinpath(entry['path']).write_bytes(raw);entry['bytes']=len(raw);entry['sha256']=hashlib.sha256(raw).hexdigest()
+  self.write(self.trusted)
+  with self.assertRaisesRegex(ValueError,'trusted'):self.verify()
+ def test_missing_or_duplicate_model_allowlist_rejected(self):
+  for change in ['missing','duplicate']:
+   m=json.loads(json.dumps(self.trusted))
+   if change=='missing':m['files'].pop()
+   else:m['files'].append(m['files'][0])
+   self.write(m)
+   with self.assertRaisesRegex(ValueError,'trusted'):self.verify()
+ def test_invalid_revision_rejected_before_ml_import(self):
+  self.trusted['revision']='untrusted';self.write(self.trusted)
+  with self.assertRaisesRegex(ValueError,'trusted'):self.verify()
+ def test_trusted_manifest_with_replaced_file_rejected(self):
+  self.write(self.trusted)
+  for entry in self.trusted['files']:self.root.joinpath(entry['path']).write_bytes(b'bad')
+  with self.assertRaisesRegex(ValueError,'size|checksum'):self.verify()
+
+class AdditionalSafetyTests(unittest.TestCase):
+ setUp=ModelManifestTests.setUp
+ tearDown=ModelManifestTests.tearDown
+ write=ModelManifestTests.write
+ verify=ModelManifestTests.verify
+ def test_unlisted_model_files_rejected(self):
+  self.write(self.trusted)
+  for f in self.trusted['files']:self.root.joinpath(f['path']).write_bytes(b'')
+  self.root.joinpath('added_tokens.json').write_text('{}')
+  with self.assertRaisesRegex(ValueError,'Unexpected'):self.verify()
+
+class BoundedArchiveTests(unittest.TestCase):
+ setUp=HybridTests.setUp
+ tearDown=HybridTests.tearDown
+ add=HybridTests.add
+ backend=HybridTests.backend
+ def test_oversized_archive_rejected_before_embedding(self):
+  self.add();h=self.backend()
+  self.a.db.execute('UPDATE revisions SET payload=?',('x'*(2*1024*1024+1),))
+  with self.assertRaisesRegex(ValueError,'payload'):h.search('owner','query')
+  self.assertEqual(h.encoder.calls,0)

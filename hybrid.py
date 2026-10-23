@@ -8,20 +8,34 @@ def character_spans(text,size=700,overlap=100):
  if not 0<=overlap<size:raise ValueError('Invalid chunk bounds')
  return [(start,min(start+size,len(text))) for start in range(0,len(text),size-overlap)]
 
+
+def verify_model_directory(directory):
+ """Anchor to the code-reviewed manifest beside this module, never caller hashes."""
+ directory=Path(directory)
+ trusted=json.loads(Path(__file__).with_name('model-manifest.json').read_text())
+ supplied=json.loads((directory/'manifest.json').read_text())
+ if trusted.get('revision')!=MODEL_REVISION or supplied!=trusted:
+  raise ValueError('Local manifest conflicts with trusted pinned manifest')
+ allowed={entry['path'] for entry in trusted['files']} | {'manifest.json'}
+ if {p.name for p in directory.iterdir()} != allowed:
+  raise ValueError('Unexpected or missing files in model directory')
+ for entry in trusted['files']:
+  path=directory/entry['path']
+  if path.is_symlink() or not path.is_file() or path.stat().st_size!=entry['bytes']:
+   raise ValueError('Model file type or size mismatch')
+  with path.open('rb') as stream:actual=hashlib.file_digest(stream,'sha256').hexdigest()
+  if actual!=entry['sha256']:raise ValueError('Model file checksum mismatch')
+ return directory
+
 class LocalE5Encoder:
  identity='intfloat/multilingual-e5-small@'+MODEL_REVISION
  def __init__(self,model_directory):
-  # Imports and inference require only local files. Never load pickle weights or repo code.
+  # Validate before ML imports; no pickle weights or repository executable code.
+  directory=verify_model_directory(model_directory)
   import os
   os.environ.update(HF_HUB_OFFLINE='1',TRANSFORMERS_OFFLINE='1',HF_HUB_DISABLE_TELEMETRY='1',DO_NOT_TRACK='1',TOKENIZERS_PARALLELISM='false')
   from transformers import AutoTokenizer,AutoModel
   import torch
-  directory=Path(model_directory);manifest=json.loads((directory/'manifest.json').read_text())
-  if manifest['revision']!=MODEL_REVISION:raise ValueError('Unexpected model revision')
-  required={'config.json','model.safetensors','tokenizer.json','tokenizer_config.json','special_tokens_map.json'}
-  if {f['path']for f in manifest['files']}!=required:raise ValueError('Invalid model allowlist')
-  for f in manifest['files']:
-   if hashlib.sha256((directory/f['path']).read_bytes()).hexdigest()!=f['sha256']:raise ValueError('Model file checksum mismatch')
   self.torch=torch;torch.set_num_threads(2)
   self.tokenizer=AutoTokenizer.from_pretrained(str(directory),local_files_only=True,trust_remote_code=False,use_fast=True)
   self.model=AutoModel.from_pretrained(str(directory),local_files_only=True,trust_remote_code=False,use_safetensors=True).eval().to('cpu')
@@ -52,6 +66,8 @@ class HybridBackend:
  def __init__(self,archive,encoder):
   self.archive=archive;self.encoder=encoder;self.snapshot=None;self.chunks=[];self.vectors=[]
  def _rows(self):
+  count,total=self.archive.db.execute('SELECT COUNT(*), COALESCE(SUM(length(CAST(v.payload AS BLOB))),0) FROM records r JOIN revisions v ON v.seq=r.current_revision').fetchone()
+  if count>1000 or total>2*1024*1024:raise ValueError('Pilot archive record/payload cap exceeded')
   return list(self.archive.db.execute('SELECT r.*,v.* FROM records r JOIN revisions v ON v.seq=r.current_revision ORDER BY r.id'))
  def _fingerprint(self,rows):return [(r['id'],r['seq'],r['hash'])for r in rows]
  def _index(self,owner):

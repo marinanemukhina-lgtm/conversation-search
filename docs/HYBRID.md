@@ -8,7 +8,7 @@ Model: intfloat/multilingual-e5-small, pinned revision 614241f622f53c4eeff9890bd
 
 CPU BertModel, 384 dimensions, at most 512 tokens. Token-based overlapping chunks are 192 tokens with 32-token overlap. English `query:` / `passage:` prefixes, attention-masked average pooling and L2 normalization follow the model card. Source character offsets retain exact substrings. Full text and original provenance remain in the base archive.
 
-Load only local allowlisted JSON/safetensors files and a verified download manifest. The supplied model manifest records hashes verified against pinned upstream Git blob IDs / LFS SHA256. Keep it with the model directory; never accept an arbitrary replacement manifest as independent authenticity proof. Downloads must happen separately, before processing private inputs. Constructor sets HF offline, disables telemetry, uses local_files_only=True, trust_remote_code=False and use_safetensors=True. Weights are not bundled.
+Load only local allowlisted JSON/safetensors files and a verified download manifest. The code-reviewed model-manifest.json beside hybrid.py records hashes verified against pinned upstream Git blob IDs / LFS SHA256. Its paths, sizes and hashes are the trust anchor. The local model manifest must match it exactly; altered bytes plus a matching replacement local manifest are rejected before ML imports. Unexpected model-directory entries are rejected, and weight hashes are streamed instead of allocating the whole file. Keep the trusted source package unchanged. Downloads must happen separately, before processing private inputs. Constructor sets HF offline, disables telemetry, uses local_files_only=True, trust_remote_code=False and use_safetensors=True. Weights are not bundled.
 
 Inference evaluation additionally denied Python socket connect, DNS and sendto audit events. This is an application-level check, not a hardened OS network sandbox. No inference subprocess or external API is used. Local vectors are transient in memory and not sent externally.
 
@@ -37,7 +37,7 @@ python -m unittest discover -s tests -v
 
 ## Boundaries
 
-- Small pilot only: at most 2,000 chunks, CPU threads 2, batch size 2. No persistent vector DB.
+- Small pilot only: at most 1,000 records / 2 MiB aggregate current payload / 2,000 chunks, CPU threads 2, batch size 2. No persistent vector DB.
 - Best semantic chunk determines record rank; up to three highest-scoring non-overlapping spans are presented with 200-character adjacent source context, combined with unchanged whole-query AND lexical ranks using reciprocal-rank fusion (k=60). When lexical has no hits this reduces to semantic ranking.
 - New archive revisions fail closed with a stale-index error; construct a fresh adapter to rebuild. No automatic sync or delete propagation.
 - Coverage stays partial/unknown. Missing reader content is not proof of missing original messages.
