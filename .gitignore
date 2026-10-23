@@ -10,3 +10,8 @@ imports/
 exports/
 *.zip
 *.pdf
+.venv*/
+model/
+models/
+*.safetensors
+*.bin
